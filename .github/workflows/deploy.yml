@@ -1,0 +1,26 @@
+name: Deploy to Production
+on:
+  workflow_run:
+    workflows: ["Docker Build & Push"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | sudo docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nestral-app:latest
+            if [ $(sudo docker ps -aq -f name=nestral-app) ]; then
+              sudo docker stop nestral-app
+              sudo docker rm nestral-app
+            fi
+            sudo docker run -d --name nestral-app -p 3000:3000  ${{ secrets.DOCKER_HUB_USERNAME }}/nestral-app:latest
