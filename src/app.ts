@@ -13,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+import propertyRoutes from './modules/properties/property.routes';
+import propertyLayoutRoutes from './modules/layouts/property-layout.routes';
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/reports', express.static(path.join(process.cwd(), 'reports')));
 
@@ -21,6 +23,8 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/properties', propertyRoutes);
+app.use('/api/v1/property-layouts', propertyLayoutRoutes);
 
 app.use(errorHandler);
 

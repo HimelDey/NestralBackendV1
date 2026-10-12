@@ -46,7 +46,10 @@ class AuthService {
 
     const accessToken = this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken(payload);
-    await User.findByIdAndUpdate(userDoc._id, { refreshToken });
+    await User.findByIdAndUpdate(userDoc._id, {
+      token: accessToken,
+      refreshToken,
+    });
 
     return {
       user: {
