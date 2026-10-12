@@ -113,14 +113,9 @@ class PropertyService {
     /**
      * Get a single property by ID with aggregated inspection reports
      */
-    async getPropertyById(propertyId: string, ownerId?: string): Promise<any> {
+    async getPropertyById(propertyId: string, ownerId: string): Promise<any> {
         try {
-            const filter: any = { _id: propertyId };
-            if (ownerId) {
-                filter.ownerId = ownerId;
-            }
-            
-            const property = await Property.findOne(filter);
+            const property = await Property.findOne({ _id: propertyId, ownerId });
             if (!property) {
                 throw new Error('Property not found');
             }
@@ -132,7 +127,7 @@ class PropertyService {
             property.imageUrl = primaryImg ? primaryImg.url : property.imageUrl;
 
             // Check if any element exists for this property in elements collection
-            const hasLayout = !!(await Element.exists({ propertyId }));
+            const hasLayout = !!(await Element.exists({ propertyId, ownerId }));
 
             // Fetch and aggregate inspection reports for completed inspections
             // const inspections = await Inspection.find({
@@ -321,9 +316,9 @@ class PropertyService {
     /**
      * Get property details with inspections (for task section)
      */
-    async getPropertyDetails(propertyId: string): Promise<any> {
+    async getPropertyDetails(propertyId: string, ownerId: string): Promise<any> {
         try {
-            const property = await Property.findById(propertyId);
+            const property = await Property.findOne({ _id: propertyId, ownerId });
             
             if (!property) {
                 throw new Error('Property not found');

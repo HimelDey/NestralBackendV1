@@ -56,7 +56,12 @@ class PropertyController {
     async getPropertyById(req: Request, res: Response, next: NextFunction) {
         try {
             const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-            const property = await PropertyService.getPropertyById(id);
+            const ownerId = (req as any).user?.id;
+            if (!ownerId) {
+                return res.status(401).json({ success: false, message: 'User not authenticated' });
+            }
+
+            const property = await PropertyService.getPropertyById(id, ownerId);
             res.status(200).json({ success: true, data: property });
         } catch (error) {
             next(error);
@@ -178,7 +183,12 @@ class PropertyController {
     async getPropertyDetails(req: Request, res: Response, next: NextFunction) {
         try {
             const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-            const propertyDetails = await PropertyService.getPropertyDetails(id);
+            const ownerId = (req as any).user?.id;
+            if (!ownerId) {
+                return res.status(401).json({ success: false, message: 'User not authenticated' });
+            }
+
+            const propertyDetails = await PropertyService.getPropertyDetails(id, ownerId);
             res.status(200).json({ success: true, data: propertyDetails });
         } catch (error) {
             next(error);
