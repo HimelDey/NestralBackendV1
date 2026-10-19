@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { authMiddleware } from '../../middlewares/auth.middleware';
+import { propertyOwnerMiddleware } from '../../middlewares/property-owner.middleware';
 import { layoutUpload } from '../../config/multer.config';
 import ElementController from './element.controller';
 
 const router = Router();
 
 router.use(authMiddleware);
+router.use(propertyOwnerMiddleware);
 
 router.get('/properties/:propertyId/elements', ElementController.getElementsByProperty);
 router.get('/spaces/:spaceId/elements', ElementController.getElementsBySpace);

@@ -36,6 +36,8 @@ pids/
 *.pid.lock
 uploads/
 uploads/**
+private_uploads/
+private_uploads/**
 
 # -------------------
 # Coverage & testing

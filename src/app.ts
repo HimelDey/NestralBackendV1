@@ -19,6 +19,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/reports', express.static(path.join(process.cwd(), 'reports')));
 import elementRoutes from './modules/layouts/element.routes';
 import spaceRoutes from './modules/layouts/space.routes';
+import tenantOnboardRoutes from './modules/properties/tenant-onboard.routes';
 
 app.get('/', (req: Request, res: Response) => {
     res.json({ message: 'Welcome to Nestral Backend API' });
@@ -26,6 +27,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/properties', propertyRoutes);
+app.use('/api/v1/owner', tenantOnboardRoutes);
 app.use('/api/v1/property-layouts', propertyLayoutRoutes);
 app.use('/api/v1/elements', elementRoutes);
 app.use('/api/v1/spaces', spaceRoutes);

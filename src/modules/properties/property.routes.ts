@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../../middlewares/auth.middleware';
 import { uploadMultiple } from '../../config/multer.config';
 import PropertyController from './property.controller';
+import { propertyOwnerMiddleware } from '../../middlewares/property-owner.middleware';
 
 const router = Router();
 
@@ -10,6 +11,8 @@ router.use(authMiddleware);
 
 // Create a new property (with multiple images)
 router.post('/', uploadMultiple.array('images', 10), PropertyController.createProperty);
+
+router.use(propertyOwnerMiddleware);
 
 // Get all properties
 router.get('/', PropertyController.getAllProperties);

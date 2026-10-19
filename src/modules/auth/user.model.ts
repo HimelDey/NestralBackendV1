@@ -1,9 +1,13 @@
 import mongoose, { Schema } from 'mongoose';
-import { IUser  } from '../../interfaces/user.interface';
+import { IUser, UserRole } from '../../interfaces/user.interface';
 
 const UserSchema = new Schema<IUser>({
     email: { type: String, unique: true, sparse: true, trim: true, lowercase: true },
     phoneNumber: { type: String, required: true, unique: true, trim: true },
+    roles: {
+        type: [{ type: String, enum: ['propertyOwner', 'tenant'] satisfies UserRole[] }],
+        default: ['propertyOwner']
+    },
     firstName: String,
     lastName: String, 
     profileImageUrl: { type: String, default: null },

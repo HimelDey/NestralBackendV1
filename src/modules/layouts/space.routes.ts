@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { authMiddleware } from '../../middlewares/auth.middleware';
+import { propertyOwnerMiddleware } from '../../middlewares/property-owner.middleware';
 import SpaceController from './space.controller';
 
 const router = Router({ mergeParams: true });
 
 router.use(authMiddleware);
+router.use(propertyOwnerMiddleware);
 
 router.post('/:propertyId/spaces', SpaceController.createSpace);
 router.get('/:propertyId/spaces', SpaceController.getSpacesByProperty);

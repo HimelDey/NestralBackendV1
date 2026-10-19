@@ -1,14 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
+import { randomUUID } from 'crypto';
+import { Request, Response, NextFunction } from 'express';
 
 const uploadRoot = path.join(process.cwd(), 'uploads', 'properties');
 const layoutRoot = path.join(process.cwd(), 'uploads', 'layouts');
 const inspectionRoot = path.join(process.cwd(), 'uploads', 'inspections');
+export const leaseDocumentsRoot = path.join(process.cwd(), 'private_uploads', 'leases');
 
 if (!fs.existsSync(uploadRoot)) fs.mkdirSync(uploadRoot, { recursive: true });
 if (!fs.existsSync(layoutRoot)) fs.mkdirSync(layoutRoot, { recursive: true });
 if (!fs.existsSync(inspectionRoot)) fs.mkdirSync(inspectionRoot, { recursive: true });
+if (!fs.existsSync(leaseDocumentsRoot)) fs.mkdirSync(leaseDocumentsRoot, { recursive: true });
 
 const propertyStorage = multer.diskStorage({
     destination: (_req, _file, cb) => {
@@ -76,5 +80,55 @@ export const inspectionUpload = multer({
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024, files: 10 }
 });
+
+const leaseDocumentMimeExtensions: Record<string, string> = {
+    'application/pdf': '.pdf',
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'image/webp': '.webp',
+    'image/gif': '.gif'
+};
+
+const leaseDocumentUpload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => cb(null, leaseDocumentsRoot),
+        filename: (_req, file, cb) => {
+            const extension = leaseDocumentMimeExtensions[file.mimetype];
+            cb(null, `${randomUUID()}${extension || ''}`);
+        }
+    }),
+    fileFilter: (_req, file, cb) => {
+        if (Object.prototype.hasOwnProperty.call(leaseDocumentMimeExtensions, file.mimetype)) {
+            cb(null, true);
+            return;
+        }
+        cb(new Error('Only PDF and image files are allowed'));
+    },
+    limits: { fileSize: 5 * 1024 * 1024, files: 10 }
+}).array('documents', 10);
+
+export const uploadLeaseDocuments = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): void => {
+    leaseDocumentUpload(req, res, (error?: unknown) => {
+        if (!error) {
+            next();
+            return;
+        }
+
+        const message = error instanceof Error ? error.message : String(error);
+        if (
+            error instanceof multer.MulterError ||
+            message === 'Only PDF and image files are allowed'
+        ) {
+            res.status(400).json({ success: false, message });
+            return;
+        }
+
+        next(error);
+    });
+};
 
 export default uploadSingle;

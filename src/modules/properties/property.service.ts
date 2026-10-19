@@ -7,6 +7,8 @@ import { buildPropertyImageUrl, deletePropertyImagesByFilename } from '../../uti
 import PropertyLayout from '../layouts/property-layout.model';
 import PropertyLayoutService from '../layouts/property-layout.service';
 import Element from '../layouts/element.model';
+import Lease from './lease.model';
+import User from '../auth/user.model';
 
 class PropertyService {
     private buildImagesWithFullUrl(images: any[]): any[] {
@@ -58,6 +60,10 @@ class PropertyService {
 
             // Auto-create layout sections from property fields (bedrooms, bathrooms, garage)
             await PropertyLayoutService.autoCreateLayout(property);
+            await User.updateOne(
+                { _id: ownerId },
+                { $addToSet: { roles: 'propertyOwner' } }
+            );
 
             return property;
         } catch (error: any) {
@@ -128,6 +134,7 @@ class PropertyService {
 
             // Check if any element exists for this property in elements collection
             const hasLayout = !!(await Element.exists({ propertyId, ownerId }));
+            const tenant = await this.getActiveTenant(propertyId);
 
             // Fetch and aggregate inspection reports for completed inspections
             // const inspections = await Inspection.find({
@@ -143,6 +150,7 @@ class PropertyService {
             return { 
                 ...result, 
                 hasLayout,
+                tenant,
                 // inspections: formattedInspections
             };
         } catch (error) {
@@ -340,6 +348,7 @@ class PropertyService {
 
             const images = this.buildImagesWithFullUrl((property as any).images ?? []);
             const primaryImg = images.find((img: any) => img.isPrimary) || images[0];
+            const tenant = await this.getActiveTenant(propertyId);
 
             // Format property details
             return {
@@ -355,7 +364,7 @@ class PropertyService {
                 bathrooms: property.bathrooms,
                 garage: property.garage,
                 isFurnished: property.isFurnished,
-                tenant: null, // TODO: Add tenant data when tenant module is implemented
+                tenant,
                 documents: [], // TODO: Add documents when document module is implemented
                 // inspections: inspectionsWithId,
                 maintenance: [], // TODO: Add maintenance when implemented later
@@ -364,6 +373,37 @@ class PropertyService {
         } catch (error) {
             throw error;
         }
+    }
+
+    private async getActiveTenant(propertyId: string): Promise<Record<string, unknown> | null> {
+        const lease = await Lease.findOne({ propertyId, status: 'active' })
+            .populate({
+                path: 'tenantId',
+                select: 'phoneNumber firstName lastName profileImageUrl',
+            })
+            .lean();
+
+        if (!lease || !lease.tenantId || typeof lease.tenantId === 'string') {
+            return null;
+        }
+
+        const tenant = lease.tenantId as unknown as {
+            _id: { toString(): string };
+            phoneNumber: string;
+            firstName?: string;
+            lastName?: string;
+            profileImageUrl?: string | null;
+        };
+
+        return {
+            id: tenant._id.toString(),
+            phoneNumber: tenant.phoneNumber,
+            ...(tenant.firstName ? { firstName: tenant.firstName } : {}),
+            ...(tenant.lastName ? { lastName: tenant.lastName } : {}),
+            ...(tenant.profileImageUrl
+                ? { profileImageUrl: tenant.profileImageUrl }
+                : {}),
+        };
     }
 
 }

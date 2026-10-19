@@ -35,7 +35,7 @@ class AuthService {
 
     let userDoc = await User.findOne({ phoneNumber: phone });
     if (!userDoc) {
-      userDoc = await User.create({ phoneNumber: phone });
+      userDoc = await User.create({ phoneNumber: phone, roles: [] });
     }
 
     const payload: { id: string; phoneNumber: string; email?: string } = {
@@ -61,6 +61,7 @@ class AuthService {
         ...(userDoc.profileImageUrl
           ? { profileImageUrl: userDoc.profileImageUrl }
           : {}),
+        roles: userDoc.roles,
         approved: userDoc.approved,
       },
       token: accessToken,
