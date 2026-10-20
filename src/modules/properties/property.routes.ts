@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../../middlewares/auth.middleware';
-import { uploadMultiple } from '../../config/multer.config';
+import { uploadMultiple, uploadPropertyDocuments } from '../../config/multer.config';
 import PropertyController from './property.controller';
 import { propertyOwnerMiddleware } from '../../middlewares/property-owner.middleware';
 
@@ -19,6 +19,10 @@ router.get('/', PropertyController.getAllProperties);
 
 // Get property details with inspections (must be before generic /:id route)
 router.get('/:id/details', PropertyController.getPropertyDetails);
+
+// Upload and access property documents
+router.post('/:id/documents', uploadPropertyDocuments, PropertyController.uploadDocuments);
+router.get('/:id/documents/:documentId', PropertyController.downloadDocument);
 
 // Get a single property by ID
 router.get('/:id', PropertyController.getPropertyById);

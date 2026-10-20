@@ -1,9 +1,15 @@
 import type { Express } from 'express';
+import path from 'path';
 import Property from './property.model';
 // import Inspection from '../inspections/inspection.model';
-import { IProperty, IPropertyBase } from '../../interfaces/property.interface';
+import { IProperty, IPropertyBase, IPropertyDocument } from '../../interfaces/property.interface';
 // import { formatInspectionsResponse } from '../../utils/inspection-status';
 import { buildPropertyImageUrl, deletePropertyImagesByFilename } from '../../utils/file-storage';
+import {
+    buildPropertyDocumentMetadata,
+    deletePropertyDocumentUploads,
+} from '../../utils/property-document-storage';
+import { propertyDocumentsRoot } from '../../config/multer.config';
 import PropertyLayout from '../layouts/property-layout.model';
 import PropertyLayoutService from '../layouts/property-layout.service';
 import Element from '../layouts/element.model';
@@ -11,6 +17,28 @@ import Lease from './lease.model';
 import User from '../auth/user.model';
 
 class PropertyService {
+    private buildPropertyDocumentUrls(
+        propertyId: string,
+        documents: IPropertyDocument[] = []
+    ): Record<string, unknown>[] {
+        const baseUrl = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+        return documents.map(document => {
+            const documentId = document._id?.toString();
+            if (!documentId) {
+                throw new Error('Property document is missing its identifier');
+            }
+            return {
+                id: documentId,
+                name: document.name,
+                contentType: document.contentType,
+                size: document.size,
+                uploadedBy: document.uploadedBy,
+                uploadedAt: document.uploadedAt,
+                url: `${baseUrl}/api/v1/properties/${propertyId}/documents/${documentId}`,
+            };
+        });
+    }
+
     private buildImagesWithFullUrl(images: any[]): any[] {
         const baseUrl = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
         return (images ?? []).map((img: any) => ({
@@ -149,6 +177,7 @@ class PropertyService {
             const result = property.toObject();
             return { 
                 ...result, 
+                documents: this.buildPropertyDocumentUrls(propertyId, property.documents ?? []),
                 hasLayout,
                 tenant,
                 // inspections: formattedInspections
@@ -156,6 +185,54 @@ class PropertyService {
         } catch (error) {
             throw error;
         }
+    }
+
+    async uploadPropertyDocuments(
+        propertyId: string,
+        ownerId: string,
+        files: Express.Multer.File[]
+    ): Promise<Record<string, unknown>[]> {
+        try {
+            const property = await Property.findOne({ _id: propertyId, ownerId });
+            if (!property) {
+                throw new Error('Property not found or unauthorized');
+            }
+
+            const documents = await buildPropertyDocumentMetadata(files, ownerId);
+            property.documents = [...(property.documents ?? []), ...documents];
+            await property.save();
+            return this.buildPropertyDocumentUrls(propertyId, property.documents);
+        } catch (error) {
+            await deletePropertyDocumentUploads(files);
+            throw error;
+        }
+    }
+
+    async getPropertyDocumentFile(
+        propertyId: string,
+        ownerId: string,
+        documentId: string
+    ): Promise<{ path: string; name: string; contentType: string }> {
+        const property = await Property.findOne({ _id: propertyId, ownerId });
+        if (!property) {
+            throw new Error('Property not found or unauthorized');
+        }
+
+        const document = property.documents?.find(item => item._id?.toString() === documentId);
+        if (!document) {
+            throw new Error('Property document not found');
+        }
+
+        const storageKey = path.basename(document.storageKey);
+        if (storageKey !== document.storageKey) {
+            throw new Error('Invalid property document storage key');
+        }
+
+        return {
+            path: path.join(propertyDocumentsRoot, storageKey),
+            name: document.name,
+            contentType: document.contentType,
+        };
     }
 
     /**
@@ -365,7 +442,10 @@ class PropertyService {
                 garage: property.garage,
                 isFurnished: property.isFurnished,
                 tenant,
-                documents: [], // TODO: Add documents when document module is implemented
+                documents: this.buildPropertyDocumentUrls(
+                    propertyId,
+                    property.documents ?? []
+                ),
                 // inspections: inspectionsWithId,
                 maintenance: [], // TODO: Add maintenance when implemented later
                 createdAt: property.createdAt

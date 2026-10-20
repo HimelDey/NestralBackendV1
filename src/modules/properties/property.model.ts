@@ -24,11 +24,32 @@ const imageSchema = new Schema(
   { _id: true, timestamps: true },
 );
 
+const documentSchema = new Schema(
+  {
+    storageKey: { type: String, required: true },
+    name: { type: String, required: true },
+    contentType: {
+      type: String,
+      enum: ["application/pdf", "image/jpeg"],
+      required: true,
+    },
+    size: { type: Number, required: true },
+    uploadedBy: { type: String, required: true },
+    uploadedAt: { type: Date, required: true },
+  },
+  { _id: true },
+);
+
 const PropertySchema = new Schema<IProperty>(
   {
     imageUrl: { type: String, default: null },
     images: {
       type: [imageSchema],
+      default: [],
+      required: false,
+    },
+    documents: {
+      type: [documentSchema],
       default: [],
       required: false,
     },

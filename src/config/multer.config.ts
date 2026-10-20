@@ -8,11 +8,13 @@ const uploadRoot = path.join(process.cwd(), 'uploads', 'properties');
 const layoutRoot = path.join(process.cwd(), 'uploads', 'layouts');
 const inspectionRoot = path.join(process.cwd(), 'uploads', 'inspections');
 export const leaseDocumentsRoot = path.join(process.cwd(), 'private_uploads', 'leases');
+export const propertyDocumentsRoot = path.join(process.cwd(), 'private_uploads', 'properties');
 
 if (!fs.existsSync(uploadRoot)) fs.mkdirSync(uploadRoot, { recursive: true });
 if (!fs.existsSync(layoutRoot)) fs.mkdirSync(layoutRoot, { recursive: true });
 if (!fs.existsSync(inspectionRoot)) fs.mkdirSync(inspectionRoot, { recursive: true });
 if (!fs.existsSync(leaseDocumentsRoot)) fs.mkdirSync(leaseDocumentsRoot, { recursive: true });
+if (!fs.existsSync(propertyDocumentsRoot)) fs.mkdirSync(propertyDocumentsRoot, { recursive: true });
 
 const propertyStorage = multer.diskStorage({
     destination: (_req, _file, cb) => {
@@ -122,6 +124,45 @@ export const uploadLeaseDocuments = (
         if (
             error instanceof multer.MulterError ||
             message === 'Only PDF and image files are allowed'
+        ) {
+            res.status(400).json({ success: false, message });
+            return;
+        }
+
+        next(error);
+    });
+};
+
+const propertyDocumentUpload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => cb(null, propertyDocumentsRoot),
+        filename: (_req, _file, cb) => cb(null, `${randomUUID()}`),
+    }),
+    fileFilter: (_req, file, cb) => {
+        if (file.mimetype === 'application/pdf' || file.mimetype === 'image/jpeg') {
+            cb(null, true);
+            return;
+        }
+        cb(new Error('Only PDF and JPEG files are allowed'));
+    },
+    limits: { fileSize: 5 * 1024 * 1024, files: 10 }
+}).array('documents', 10);
+
+export const uploadPropertyDocuments = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): void => {
+    propertyDocumentUpload(req, res, (error?: unknown) => {
+        if (!error) {
+            next();
+            return;
+        }
+
+        const message = error instanceof Error ? error.message : String(error);
+        if (
+            error instanceof multer.MulterError ||
+            message === 'Only PDF and JPEG files are allowed'
         ) {
             res.status(400).json({ success: false, message });
             return;

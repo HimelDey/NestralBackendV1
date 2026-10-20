@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import PropertyService from './property.service';
+import { PropertyDocumentValidationError } from '../../utils/property-document-storage';
 
 class PropertyController {
     /**
@@ -63,6 +64,56 @@ class PropertyController {
 
             const property = await PropertyService.getPropertyById(id, ownerId);
             res.status(200).json({ success: true, data: property });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Upload documents for a property
+     */
+    async uploadDocuments(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            const ownerId = (req as any).user?.id;
+            if (!ownerId) {
+                return res.status(401).json({ success: false, message: 'User not authenticated' });
+            }
+
+            const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+            if (files.length === 0) {
+                return res.status(400).json({ success: false, message: 'At least one document is required' });
+            }
+
+            const documents = await PropertyService.uploadPropertyDocuments(id, ownerId, files);
+            res.status(201).json({ success: true, data: documents });
+        } catch (error) {
+            if (error instanceof PropertyDocumentValidationError) {
+                return res.status(400).json({ success: false, message: error.message });
+            }
+            next(error);
+        }
+    }
+
+    /**
+     * Download a property document
+     */
+    async downloadDocument(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+            const documentId = Array.isArray(req.params.documentId)
+                ? req.params.documentId[0]
+                : req.params.documentId;
+            const ownerId = (req as any).user?.id;
+            if (!ownerId) {
+                return res.status(401).json({ success: false, message: 'User not authenticated' });
+            }
+
+            const document = await PropertyService.getPropertyDocumentFile(id, ownerId, documentId);
+            res.setHeader('Content-Type', document.contentType);
+            res.download(document.path, document.name, error => {
+                if (error) next(error);
+            });
         } catch (error) {
             next(error);
         }

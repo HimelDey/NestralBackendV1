@@ -10,10 +10,21 @@ export interface IPropertyImage {
   updatedAt?: Date;
 }
 
+export interface IPropertyDocument {
+  _id?: Types.ObjectId;
+  storageKey: string;
+  name: string;
+  contentType: "application/pdf" | "image/jpeg";
+  size: number;
+  uploadedBy: string;
+  uploadedAt: Date;
+}
+
 export interface IProperty extends Document {
   id: string;
   imageUrl?: string;
   images?: IPropertyImage[];
+  documents?: IPropertyDocument[];
 
   streetAddress: string;
 
