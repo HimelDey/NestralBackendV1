@@ -5,6 +5,11 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { errorHandler } from './middlewares/error.middleware';
 import authRoutes from './modules/auth/auth.routes';
+import propertyRoutes from './modules/properties/property.routes';
+import tenantOnboardRoutes from './modules/properties/tenant-onboard.routes';
+import propertyLayoutRoutes from './modules/layouts/property-layout.routes';
+import elementRoutes from './modules/layouts/element.routes';
+import spaceRoutes from './modules/layouts/space.routes';
 
 const app: Application = express();
 
@@ -13,13 +18,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-import propertyRoutes from './modules/properties/property.routes';
-import propertyLayoutRoutes from './modules/layouts/property-layout.routes';
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use('/reports', express.static(path.join(process.cwd(), 'reports')));
-import elementRoutes from './modules/layouts/element.routes';
-import spaceRoutes from './modules/layouts/space.routes';
-import tenantOnboardRoutes from './modules/properties/tenant-onboard.routes';
 
 app.get('/', (req: Request, res: Response) => {
     res.json({ message: 'Welcome to Nestral Backend API' });
