@@ -10,6 +10,7 @@ import tenantOnboardRoutes from './modules/properties/tenant-onboard.routes';
 import propertyLayoutRoutes from './modules/layouts/property-layout.routes';
 import elementRoutes from './modules/layouts/element.routes';
 import spaceRoutes from './modules/layouts/space.routes';
+import inspectionRoutes from './modules/inspections/inspection.routes';
 
 const app: Application = express();
 
@@ -31,7 +32,7 @@ app.use('/api/v1/owner', tenantOnboardRoutes);
 app.use('/api/v1/property-layouts', propertyLayoutRoutes);
 app.use('/api/v1/elements', elementRoutes);
 app.use('/api/v1/spaces', spaceRoutes);
-
+app.use('/api/v1/inspections', inspectionRoutes);
 app.use(errorHandler);
 
 export default app;
