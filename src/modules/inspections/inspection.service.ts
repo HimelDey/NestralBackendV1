@@ -118,7 +118,7 @@ class InspectionService {
             }
 
             const [property, inspector, comments] = await Promise.all([
-                Property.findById(inspection.propertyId).select('unitAptName fullAddress imageUrl'),
+                Property.findById(inspection.propertyId).select('streetAddress'),
                 User.findById(inspection.inspectorId).select('firstName lastName profileImageUrl'),
                 InspectionComment.find({ inspectionId }).sort({ createdAt: -1 }).lean()
             ]);
@@ -137,7 +137,7 @@ class InspectionService {
                 duration: calculateDuration(inspection.timeStart, inspection.timeEnd),
                 property: property ? {
                     id: property._id,
-                    name: `${property.streetAddress}`
+                    address: `${property.streetAddress}`
                     
                 } : null,
                 inspector: inspector ? {
