@@ -7,6 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 const uploadRoot = path.join(process.cwd(), 'uploads', 'properties');
 const layoutRoot = path.join(process.cwd(), 'uploads', 'layouts');
 const inspectionRoot = path.join(process.cwd(), 'uploads', 'inspections');
+const profileRoot = path.join(process.cwd(), 'uploads', 'profiles');
 export const leaseDocumentsRoot = path.join(process.cwd(), 'private_uploads', 'leases');
 export const propertyDocumentsRoot = path.join(process.cwd(), 'private_uploads', 'properties');
 
@@ -68,6 +69,42 @@ export const layoutUpload = multer({
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024, files: 10 }
 });
+
+const profileImageUpload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => {
+            fs.mkdirSync(profileRoot, { recursive: true });
+            cb(null, profileRoot);
+        },
+        filename: (_req, file, cb) => {
+            const ext = path.extname(file.originalname).toLowerCase();
+            cb(null, `profile-${randomUUID()}${ext}`);
+        }
+    }),
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024, files: 1 }
+}).single('image');
+
+export const uploadProfileImage = (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): void => {
+    profileImageUpload(req, res, (error?: unknown) => {
+        if (!error) {
+            next();
+            return;
+        }
+
+        const message = error instanceof Error ? error.message : String(error);
+        if (error instanceof multer.MulterError || message === 'Only image files are allowed') {
+            res.status(400).json({ success: false, message });
+            return;
+        }
+
+        next(error);
+    });
+};
 
 export const inspectionUpload = multer({
     storage: multer.diskStorage({

@@ -17,6 +17,12 @@ export const buildLayoutImageUrl = (filename: string): string =>
 export const buildInspectionImageUrl = (filename: string): string =>
     buildUrl('inspections', filename);
 
+export const toAbsoluteUrl = (urlOrPath: string): string => {
+    if (/^https?:\/\//i.test(urlOrPath)) return urlOrPath;
+    const baseUrl = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
+    return `${baseUrl}/${urlOrPath.replace(/^\//, '')}`;
+};
+
 export const deleteImageByUrl = (imageUrl?: string | null): void => {
     if (!imageUrl) return;
 

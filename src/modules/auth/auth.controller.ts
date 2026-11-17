@@ -70,6 +70,23 @@ class AuthController {
             next(error);
         }
     }
+
+    async updateProfile(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user?.id;
+            if (!userId) throw new Error('User not authenticated');
+            const { firstName, lastName, email } = req.body ?? {};
+            const updateData: Record<string, unknown> = {};
+            if (firstName !== undefined) updateData.firstName = firstName;
+            if (lastName !== undefined) updateData.lastName = lastName;
+            if (email !== undefined) updateData.email = email;
+            if (req.file) updateData.profileImageUrl = `/uploads/profiles/${req.file.filename}`;
+            const updatedUser = await AuthService.updateProfile(userId, updateData);
+            res.status(200).json({ success: true, data: updatedUser });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new AuthController();

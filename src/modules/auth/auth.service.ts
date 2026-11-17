@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import User from "./user.model";
 import { config } from "../../config";
+import { IUser } from "../../interfaces/user.interface";
+import { toAbsoluteUrl } from "../../utils/file-storage";
 
 const FIXED_OTP = "123456";
 
@@ -50,19 +52,17 @@ class AuthService {
       token: accessToken,
       refreshToken,
     });
-
+    const isVerifed = userDoc.firstName && userDoc.lastName?true:false;
     return {
       user: {
         id: userDoc._id.toString(),
         phoneNumber: userDoc.phoneNumber,
-        ...(userDoc.email ? { email: userDoc.email } : {}),
-        ...(userDoc.firstName ? { firstName: userDoc.firstName } : {}),
-        ...(userDoc.lastName ? { lastName: userDoc.lastName } : {}),
-        ...(userDoc.profileImageUrl
-          ? { profileImageUrl: userDoc.profileImageUrl }
-          : {}),
-        roles: userDoc.roles,
+        email: userDoc.email ?? null,
+        firstName: userDoc.firstName ?? null,
+        lastName: userDoc.lastName ?? null,
+        profileImageUrl: userDoc.profileImageUrl ? toAbsoluteUrl(userDoc.profileImageUrl) : null,
         approved: userDoc.approved,
+        verified: isVerifed
       },
       token: accessToken,
       refreshToken,
@@ -120,6 +120,23 @@ class AuthService {
    */
   async logoutAll(userId: string): Promise<void> {
     await User.findByIdAndUpdate(userId, { refreshToken: null });
+  }
+
+  async updateProfile(userId: string, updateData: Partial<IUser>): Promise<any> {
+    const userDoc = await User.findByIdAndUpdate(userId, updateData, { new: true });
+    if (!userDoc) throw new Error('User not found');
+    const isVerifed = userDoc.firstName && userDoc.lastName ? true : false;
+    return {
+      id: userDoc._id.toString(),
+      phoneNumber: userDoc.phoneNumber,
+      email: userDoc.email ?? null,
+      firstName: userDoc.firstName ?? null,
+      lastName: userDoc.lastName ?? null,
+      profileImageUrl: userDoc.profileImageUrl ? toAbsoluteUrl(userDoc.profileImageUrl) : null,
+      roles: userDoc.roles,
+      approved: userDoc.approved,
+      verified: isVerifed
+    };
   }
 }
 

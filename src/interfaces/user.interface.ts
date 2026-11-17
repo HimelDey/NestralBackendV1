@@ -15,6 +15,7 @@ export interface IUserBase {
   approved: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  verified?:boolean;
 }
 
 export interface IUser extends IUserBase, Document {}
