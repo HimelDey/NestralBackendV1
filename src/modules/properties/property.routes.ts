@@ -10,12 +10,12 @@ const router = Router();
 router.use(authMiddleware);
 
 // Create a new property (with multiple images)
-router.post('/', uploadMultiple.array('images', 10), PropertyController.createProperty);
+router.post('/', uploadMultiple.array('images', 10), PropertyController.propertyCreate);
 
 router.use(propertyOwnerMiddleware);
 
 // Get all properties
-router.get('/', PropertyController.getAllProperties);
+router.get('/', PropertyController.getPropertiesAll);
 
 // Get property details with inspections (must be before generic /:id route)
 router.get('/:id/details', PropertyController.getPropertyDetails);
@@ -28,7 +28,7 @@ router.get('/:id/documents/:documentId', PropertyController.downloadDocument);
 router.get('/:id', PropertyController.getPropertyById);
 
 // Update a property (with multiple images)
-router.put('/:id', uploadMultiple.array('images', 10), PropertyController.updateProperty);
+router.put('/:id', uploadMultiple.array('images', 10), PropertyController.updatePropertyById);
 
 // Set primary image
 router.put('/:id/primary-image', PropertyController.setPrimaryImage);
@@ -37,6 +37,6 @@ router.put('/:id/primary-image', PropertyController.setPrimaryImage);
 router.put('/:id/reorder-images', PropertyController.reorderImages);
 
 // Delete a property
-router.delete('/:id', PropertyController.deleteProperty);
+router.delete('/:id', PropertyController.deletePropertyById);
 
 export default router;
