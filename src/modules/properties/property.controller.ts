@@ -6,7 +6,7 @@ class PropertyController {
     /**
      * Create a new property
      */
-    async createProperty(req: Request, res: Response, next: NextFunction) {
+    async propertyCreate(req: Request, res: Response, next: NextFunction) {
         try {
             const ownerId = (req as any).user?.id;
             if (!ownerId) {
@@ -16,7 +16,7 @@ class PropertyController {
             const imageFiles = (req as any).files as Express.Multer.File[] | undefined;
             const bodyData = { ...req.body };
             delete bodyData.images; // strip raw images field; actual images come from uploaded files
-            const property = await PropertyService.createProperty(bodyData, ownerId, imageFiles);
+            const property = await PropertyService.propertyCreate(bodyData, ownerId, imageFiles);
             res.status(201).json({ success: true, data: property });
         } catch (error) {
             next(error);
@@ -26,7 +26,7 @@ class PropertyController {
     /**
      * Get all properties for the authenticated user
      */
-    async getAllProperties(req: Request, res: Response, next: NextFunction) {
+    async getPropertiesAll(req: Request, res: Response, next: NextFunction) {
         try {
             const ownerId = (req as any).user?.id;
             
@@ -43,7 +43,7 @@ class PropertyController {
                 });
             }
             
-            const properties = await PropertyService.getAllProperties(ownerId, status);
+            const properties = await PropertyService.getPropertiesAll(ownerId, status);
             
             res.status(200).json({ success: true, data: properties });
         } catch (error) {
@@ -122,7 +122,7 @@ class PropertyController {
     /**
      * Update a property
      */
-    async updateProperty(req: Request, res: Response, next: NextFunction) {
+    async updatePropertyById(req: Request, res: Response, next: NextFunction) {
         try {
             const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
             const ownerId = (req as any).user?.id;
@@ -142,7 +142,7 @@ class PropertyController {
             delete updateData.imagesToDelete; // Remove from updates object
             delete updateData.images; // strip raw images field; actual images come from uploaded files
 
-            const property = await PropertyService.updateProperty(id, updateData, ownerId, imageFiles, imagesToDelete);
+            const property = await PropertyService.updatePropertyById(id, updateData, ownerId, imageFiles, imagesToDelete);
             res.status(200).json({ success: true, data: property });
         } catch (error) {
             next(error);
@@ -152,7 +152,7 @@ class PropertyController {
     /**
      * Delete a property
      */
-    async deleteProperty(req: Request, res: Response, next: NextFunction) {
+    async deletePropertyById(req: Request, res: Response, next: NextFunction) {
         try {
             const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
             const ownerId = (req as any).user?.id;
@@ -161,7 +161,7 @@ class PropertyController {
                 return res.status(401).json({ success: false, message: 'User not authenticated' });
             }
 
-            await PropertyService.deleteProperty(id, ownerId);
+            await PropertyService.deletePropertyById(id, ownerId);
             res.status(200).json({ success: true, message: 'Property deleted successfully' });
         } catch (error) {
             next(error);

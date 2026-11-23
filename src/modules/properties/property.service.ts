@@ -56,7 +56,7 @@ class PropertyService {
     /**
      * Create a new property
      */
-    async createProperty(
+    async propertyCreate(
         propertyData: IPropertyBase,
         ownerId: string,
         imageFiles?: Express.Multer.File[]
@@ -110,7 +110,7 @@ class PropertyService {
     /**
      * Get all properties for a specific owner
      */
-    async getAllProperties(ownerId: string, status?: string): Promise<any[]> {
+    async getPropertiesAll(ownerId: string, status?: string): Promise<any[]> {
         try {
             const query: Record<string, any> = { ownerId };
             if (status) query.status = status;
@@ -238,7 +238,7 @@ class PropertyService {
     /**
      * Update a property
      */
-    async updateProperty(
+    async updatePropertyById(
         propertyId: string,
         propertyData: Partial<IPropertyBase>,
         ownerId: string,
@@ -306,7 +306,7 @@ class PropertyService {
     /**
      * Delete a property
      */
-    async deleteProperty(propertyId: string, ownerId: string): Promise<boolean> {
+    async deletePropertyById(propertyId: string, ownerId: string): Promise<boolean> {
         try {
             const property = await Property.findOne({ _id: propertyId, ownerId });
             
