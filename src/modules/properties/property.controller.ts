@@ -44,7 +44,15 @@ class PropertyController {
             }
             
             const properties = await PropertyService.getPropertiesAll(ownerId, status);
-            
+
+            if (properties.length === 0) {
+                return res.status(200).json({
+                    success: true,
+                    message: 'No properties are associated with this user',
+                    data: []
+                });
+            }
+
             res.status(200).json({ success: true, data: properties });
         } catch (error) {
             next(error);

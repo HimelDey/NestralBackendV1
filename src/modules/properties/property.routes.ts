@@ -12,10 +12,10 @@ router.use(authMiddleware);
 // Create a new property (with multiple images)
 router.post('/', uploadMultiple.array('images', 10), PropertyController.propertyCreate);
 
-router.use(propertyOwnerMiddleware);
-
-// Get all properties
+// Get all properties (scoped to the user; returns an empty list when they have none)
 router.get('/', PropertyController.getPropertiesAll);
+
+router.use(propertyOwnerMiddleware);
 
 // Get property details with inspections (must be before generic /:id route)
 router.get('/:id/details', PropertyController.getPropertyDetails);
