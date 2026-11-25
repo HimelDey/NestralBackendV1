@@ -39,6 +39,25 @@ class AuthController {
         }
     }
 
+    async onboardClearance(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { user_id } = req.body;
+            if (typeof user_id !== 'string' || !/^[a-f\d]{24}$/i.test(user_id)) {
+                return res.status(400).json({ success: false, message: 'A valid user_id is required' });
+            }
+            if ((req as any).user?.id !== user_id) {
+                return res.status(403).json({ success: false, message: 'Not allowed to onboard another user' });
+            }
+            const user = await AuthService.completeOnboarding(user_id);
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'Tenant not found' });
+            }
+            return res.status(200).json({ success: true, data: { id: user_id, isOnboarded: true } });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async refresh(req: Request, res: Response, next: NextFunction) {
         try {
             const { refreshToken } = req.body;

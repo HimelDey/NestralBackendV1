@@ -9,4 +9,5 @@ router.post('/verify-otp', AuthController.verifyOtp);
 router.post('/refresh',  authMiddleware, AuthController.refresh);
 router.post('/logout', authMiddleware, AuthController.logout);
 router.post('/logout-all', authMiddleware, AuthController.logoutAll);
+router.post('/onboard-clearance', authMiddleware, AuthController.onboardClearance);
 export default router;

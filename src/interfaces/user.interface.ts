@@ -13,6 +13,7 @@ export interface IUserBase {
   token?: string;
   refreshToken?: string;
   approved: boolean;
+  isOnboarded: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
