@@ -53,10 +53,15 @@ class AuthService {
       userDoc = await User.create({ phoneNumber: phone, roles: [] });
     }
 
-    const activeLease = await Lease.findOne({
-      tenantId: userDoc._id,
-      status: "active",
-    }).populate("propertyId", "streetAddress");
+    const isOwnerOnly =
+      userDoc.roles.includes("propertyOwner") && !userDoc.roles.includes("tenant");
+
+    const activeLease = isOwnerOnly
+      ? null
+      : await Lease.findOne({
+          tenantId: userDoc._id,
+          status: "active",
+        }).populate("propertyId", "streetAddress");
 
     const populatedProperty = activeLease?.propertyId as unknown as
       | { _id: { toString: () => string }; streetAddress: string }

@@ -6,7 +6,7 @@ const UserSchema = new Schema<IUser>({
     phoneNumber: { type: String, required: true, unique: true, trim: true },
     roles: {
         type: [{ type: String, enum: ['propertyOwner', 'tenant'] satisfies UserRole[] }],
-        default: ['propertyOwner']
+        default: []
     },
     firstName: String,
     lastName: String, 
